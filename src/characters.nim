@@ -76,7 +76,7 @@ const characterList* = [
   "simon",
   "snake",
   "sonic",
-  "ora",
+  "sora",
   "steve",
   "terry",
   "toon_link",
