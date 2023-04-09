@@ -13,6 +13,7 @@ bin           = @["ufd"]
 
 requires "nim >= 1.6.12"
 requires "jester >= 0.5.0"
+requires "nimtest >= 0.1.2"
 
 task runr, "Runs the program":
   exec "nim r -d:release --opt:speed src/ufd.nim"
