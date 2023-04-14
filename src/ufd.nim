@@ -1,4 +1,4 @@
-import std/[json, os, strformat, strutils, options, sequtils, uri, algorithm]
+import std/[json, os, strutils, options, sequtils, uri]
 import jester
 import characters, fuzzy
 
@@ -57,10 +57,11 @@ type
 
   Character = object
     name: string
+    namePretty: string
     moves: Table[string, Move]
 
-proc newCharacter(name: string): Character =
-  return Character(name: name, moves: initTable[string, Move]())
+proc newCharacter(name, namePretty: string): Character =
+  return Character(name: name, namePretty: namePretty, moves: initTable[string, Move]())
 
 var characterLookup = initTable[string, Character]()
 
@@ -69,7 +70,7 @@ proc populateCache() =
     let json = parseFile(file)
     let characterName = splitFile(file).name
     let characterJson = json.to(CharacterJson)
-    var character = newCharacter(characterName)
+    var character = newCharacter(characterName, characterJson.name)
     for moveSection in characterJson.move_sections:
       for move in moveSection.moves:
         character.moves[move.move_name] = move
@@ -78,6 +79,11 @@ proc populateCache() =
 echo "Populating cache..."
 populateCache()
 echo "Cache built successfully."
+
+proc findCharacter(characterName: string): Option[Character] =
+  let searchedNames = sortByScore(characterName.replace(" ", ""), characterList)
+  if searchedNames.len > 0 and characterLookup.hasKey(searchedNames[0]):
+    return some(characterLookup[searchedNames[0]])
 
 proc findMove(character: Character, moveName: string): Option[Move] =
   let movesList = character.moves.keys.toSeq()
@@ -90,15 +96,17 @@ routes:
     resp %characterList
 
   get "/characters/@character/@move":
-    if not characterLookup.hasKey(@"character"):
+    let characterQuery = decodeUrl(@"character")
+    let characterOpt = findCharacter(characterQuery)
+    if characterOpt.isNone:
       resp %"No character found with that name"
 
-    let character = characterLookup[@"character"]
+    let character = characterOpt.get()
     let moveQuery = decodeUrl(@"move")
     let moveOpt = findMove(character, moveQuery)
     if moveOpt.isNone:
-      resp %("Move \"" & @"move" & "\" for character \"" & character.name & "\" not found.")
+      resp %("Move \"" & @"move" & "\" for character \"" & character.namePretty & "\" not found.")
     else:
-      let response = %* {"character": character.name, "move": moveOpt.get()}
+      let response = %* {"character": character.namePretty, "move": moveOpt.get()}
       resp response
 

@@ -19,6 +19,9 @@ describe "Fuzzy searcher tests":
       assert(score("Hual#1299 ", "Thur_MaliGnY#1112") < 0)
 
     block:
+        assert(score("gnw", "mr_game_and_watch") > 0)
+
+    block:
       let scoreA = score("sout", "lexjusto#4214")
       let scoreB = score("sout", "Southclaws#4153")
       assert(scoreA < scoreB)
