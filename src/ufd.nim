@@ -85,9 +85,28 @@ proc findCharacter(characterName: string): Option[Character] =
   if searchedNames.len > 0 and characterLookup.hasKey(searchedNames[0]):
     return some(characterLookup[searchedNames[0]])
 
+let moveLookupByAbberviation: Table[string, string] = {
+  "nair": "neutral air",
+  "bair": "back air",
+  "fair": "forward air",
+  "dair": "down air",
+  "uair": "up air",
+
+  "fsmash": "forward smash",
+  "side smash": "forward smash",
+  "dsmash": "down smash",
+  "usmash": "up smash",
+
+  "ftilt": "forward tilt",
+  "side tilt": "forward tilt",
+  "utilt": "up tilt",
+  "dtilt": "down tilt"
+}.toTable()
+
 proc findMove(character: Character, moveName: string): Option[Move] =
   let movesList = character.moves.keys.toSeq()
-  let searchedMoves = sortByScore(moveName, movesList)
+  let searchTerm = moveLookupByAbberviation.getOrDefault(moveName, movename)
+  let searchedMoves = sortByScore(searchTerm, movesList)
   if searchedMoves.len > 0:
     return some(character.moves[searchedMoves[0]])
 
