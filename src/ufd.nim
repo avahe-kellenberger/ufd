@@ -59,9 +59,15 @@ type
     name: string
     namePretty: string
     moves: Table[string, Move]
+    miscData: MiscData
 
-proc newCharacter(name, namePretty: string): Character =
-  return Character(name: name, namePretty: namePretty, moves: initTable[string, Move]())
+proc newCharacter(name, namePretty: string, miscData: MiscData): Character =
+  return Character(
+    name: name,
+    namePretty: namePretty,
+    moves: initTable[string, Move](),
+    miscData: miscData
+  )
 
 var characterLookup = initTable[string, Character]()
 
@@ -70,7 +76,7 @@ proc populateCache() =
     let json = parseFile(file)
     let characterName = splitFile(file).name
     let characterJson = json.to(CharacterJson)
-    var character = newCharacter(characterName, characterJson.name)
+    var character = newCharacter(characterName, characterJson.name, characterJson.misc_data)
     for moveSection in characterJson.move_sections:
       for move in moveSection.moves:
         character.moves[move.move_name] = move
@@ -128,4 +134,14 @@ routes:
     else:
       let response = %* {"character": character.namePretty, "move": moveOpt.get()}
       resp response
+
+  get "/stats/@character":
+    let characterQuery = decodeUrl(@"character")
+    let characterOpt = findCharacter(characterQuery)
+    if characterOpt.isNone:
+      resp %"No character found with that name"
+
+    let character = characterOpt.get()
+    let response = %* {"character": character.namePretty, "stats": %character.miscData.stats}
+    resp response
 
