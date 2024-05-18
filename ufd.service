@@ -1,0 +1,12 @@
+[Unit]
+Description=ufd api server
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/home/avahe/ufd/bin/ufd
+WorkingDirectory=/home/avahe/ufd/
+
+[Install]
+WantedBy=multi-user.target
+
