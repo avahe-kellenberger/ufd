@@ -1,5 +1,5 @@
 import std/[json, os, strutils, options, sequtils, uri]
-import jester
+import jesterfork
 import characters, fuzzy
 
 type
@@ -69,7 +69,7 @@ proc newCharacter(name, namePretty: string, miscData: MiscData): Character =
     miscData: miscData
   )
 
-var characterLookup = initTable[string, Character]()
+var characterLookup {.threadvar.}: Table[string, Character]
 
 proc populateCache() =
   for file in walkFiles("./data/*.json"):
@@ -82,16 +82,15 @@ proc populateCache() =
         character.moves[move.move_name] = move
     characterLookup[characterName] = character
 
-echo "Populating cache..."
-populateCache()
-echo "Cache built successfully."
+proc findCharacter(characterName: string): Option[Character] {.gcsafe.} =
+  if characterLookup.len == 0:
+    populateCache()
 
-proc findCharacter(characterName: string): Option[Character] =
   let searchedNames = sortByScore(characterName.replace(" ", ""), characterList)
   if searchedNames.len > 0 and characterLookup.hasKey(searchedNames[0]):
     return some(characterLookup[searchedNames[0]])
 
-let moveLookupByAbberviation: Table[string, string] = {
+const moveLookupByAbberviation: Table[string, string] = {
   "nair": "neutral air",
   "bair": "back air",
   "fair": "forward air",
@@ -109,7 +108,7 @@ let moveLookupByAbberviation: Table[string, string] = {
   "dtilt": "down tilt"
 }.toTable()
 
-proc findMove(character: Character, moveName: string): Option[Move] =
+proc findMove(character: Character, moveName: string): Option[Move] {.gcsafe.} =
   let movesList = character.moves.keys.toSeq()
   let searchTerm = moveLookupByAbberviation.getOrDefault(moveName, movename)
   let searchedMoves = sortByScore(searchTerm, movesList)

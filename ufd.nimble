@@ -11,8 +11,8 @@ bin           = @["ufd"]
 
 # Dependencies
 
-requires "nim >= 1.6.12"
-requires "jester >= 0.5.0"
+requires "nim >= 2.0.0"
+requires "jesterfork"
 requires "nimtest >= 0.1.2"
 
 task rund, "Runs the program in debug mode":
